@@ -1,28 +1,22 @@
 pipeline {
     agent any
     environment {
-        DOCKER_HUB_USER = 'sindhuhm18'
-        IMAGE_NAME = 'myapp'
-        IMAGE_TAG = 'v1'
+        // Define your image name once to avoid typos
+        IMAGE_NAME = "sindhuhm18/myapp:v1"
     }
     stages {
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
         stage('Build Docker Image') {
             steps {
-                // Changed 'sh' to 'bat' for Windows
-                bat "docker build -t %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG% ."
+                bat "docker build -t %IMAGE_NAME% ."
             }
         }
         stage('Push to Docker Hub') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_HUB_PASSWORD', usernameVariable: 'DOCKER_HUB_USERNAME')]) {
-                    // Changed 'sh' to 'bat' and updated syntax for Windows
-                    bat "echo %DOCKER_HUB_PASSWORD% | docker login -u %DOCKER_HUB_USERNAME% --password-stdin"
-                    bat "docker push %DOCKER_HUB_USER%/%IMAGE_NAME%:%IMAGE_TAG%"
+                // Use the ID of the credentials you created in Jenkins
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds', passwordVariable: 'PASS', usernameVariable: 'USER')]) {
+                    // One-line login and push to ensure the session is active
+                    bat "echo %PASS% | docker login -u %USER% --password-stdin"
+                    bat "docker push %IMAGE_NAME%"
                 }
             }
         }
